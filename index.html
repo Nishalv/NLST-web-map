@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        #map {
+            width: 1139px;
+            height: 877px;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/2023_minu_2000_ZStif_2.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[7.584546305692911,74.88250628155075],[13.843769768235166,83.01592008373422]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_ESRIWorldImagery_0');
+        map.getPane('pane_ESRIWorldImagery_0').style.zIndex = 400;
+        var layer_ESRIWorldImagery_0 = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            pane: 'pane_ESRIWorldImagery_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_ESRIWorldImagery_0;
+        map.addLayer(layer_ESRIWorldImagery_0);
+        map.createPane('pane_OpenStreetMap_1');
+        map.getPane('pane_OpenStreetMap_1').style.zIndex = 401;
+        var layer_OpenStreetMap_1 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_1',
+            opacity: 0.584,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_1;
+        map.addLayer(layer_OpenStreetMap_1);
+        function pop_2023_minu_2000_ZStif_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">District_N</th>\
+                        <td>' + (feature.properties['District_N'] !== null ? autolinker.link(feature.properties['District_N'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Block_Name</th>\
+                        <td>' + (feature.properties['Block_Name'] !== null ? autolinker.link(feature.properties['Block_Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Area_km2</th>\
+                        <td>' + (feature.properties['Area_km2'] !== null ? autolinker.link(feature.properties['Area_km2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_2023_minu_2000_ZStif_2_0(feature) {
+            if (feature.properties['q2wHide_diff_mean'] >= -0.123348 && feature.properties['q2wHide_diff_mean'] <= 0.000000 ) {
+                return {
+                pane: 'pane_2023_minu_2000_ZStif_2',
+                opacity: 1,
+                color: 'rgba(80,80,80,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,214,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['q2wHide_diff_mean'] >= 0.000000 && feature.properties['q2wHide_diff_mean'] <= 0.430000 ) {
+                return {
+                pane: 'pane_2023_minu_2000_ZStif_2',
+                opacity: 1,
+                color: 'rgba(80,80,80,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,183,81,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['q2wHide_diff_mean'] >= 0.430000 && feature.properties['q2wHide_diff_mean'] <= 0.860000 ) {
+                return {
+                pane: 'pane_2023_minu_2000_ZStif_2',
+                opacity: 1,
+                color: 'rgba(80,80,80,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(244,86,41,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['q2wHide_diff_mean'] >= 0.860000 && feature.properties['q2wHide_diff_mean'] <= 1.299066 ) {
+                return {
+                pane: 'pane_2023_minu_2000_ZStif_2',
+                opacity: 1,
+                color: 'rgba(80,80,80,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(68,0,2,1.0)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_2023_minu_2000_ZStif_2');
+        map.getPane('pane_2023_minu_2000_ZStif_2').style.zIndex = 402;
+        map.getPane('pane_2023_minu_2000_ZStif_2').style['mix-blend-mode'] = 'normal';
+        var layer_2023_minu_2000_ZStif_2 = new L.geoJson(json_2023_minu_2000_ZStif_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_2023_minu_2000_ZStif_2',
+            layerName: 'layer_2023_minu_2000_ZStif_2',
+            pane: 'pane_2023_minu_2000_ZStif_2',
+            onEachFeature: pop_2023_minu_2000_ZStif_2,
+            style: style_2023_minu_2000_ZStif_2_0,
+        });
+        bounds_group.addLayer(layer_2023_minu_2000_ZStif_2);
+        map.addLayer(layer_2023_minu_2000_ZStif_2);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var baseMaps = {};
+        var overlaysTree = [
+            {label: '2023_minu_2000_ZS.tif<br /><table><tr><td style="text-align: center;"><img src="legend/2023_minu_2000_ZStif_2_LessChange0.png" /></td><td>Less Change</td></tr><tr><td style="text-align: center;"><img src="legend/2023_minu_2000_ZStif_2_Change1.png" /></td><td>Change </td></tr><tr><td style="text-align: center;"><img src="legend/2023_minu_2000_ZStif_2_HighChange2.png" /></td><td>High Change</td></tr><tr><td style="text-align: center;"><img src="legend/2023_minu_2000_ZStif_2_VeryHighChange3.png" /></td><td>Very High Change</td></tr></table>', layer: layer_2023_minu_2000_ZStif_2},
+            {label: "OpenStreetMap", layer: layer_OpenStreetMap_1},
+            {label: "ESRI World Imagery", layer: layer_ESRIWorldImagery_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"Block_Name": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Block_Name = document.createElement('div');
+            div_Block_Name.id = "div_Block_Name";
+            div_Block_Name.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Block_Name);
+            sel_Block_Name = document.createElement('select');
+            sel_Block_Name.multiple = true;
+            sel_Block_Name.size = 10;
+            sel_Block_Name.id = "sel_Block_Name";
+            var Block_Name_options_str = "<option value='' unselected></option>";
+            sel_Block_Name.onchange = function(){filterFunc()};
+            Block_Name_options_str  += '<option value="Acharapakkam">Acharapakkam</option>';
+            Block_Name_options_str  += '<option value="Agastheeswaram">Agastheeswaram</option>';
+            Block_Name_options_str  += '<option value="Alanganallur">Alanganallur</option>';
+            Block_Name_options_str  += '<option value="Alangayam">Alangayam</option>';
+            Block_Name_options_str  += '<option value="Alankulam">Alankulam</option>';
+            Block_Name_options_str  += '<option value="Alathur">Alathur</option>';
+            Block_Name_options_str  += '<option value="Alwarthirunageri">Alwarthirunageri</option>';
+            Block_Name_options_str  += '<option value="Ambasamudram">Ambasamudram</option>';
+            Block_Name_options_str  += '<option value="Ammapet">Ammapet</option>';
+            Block_Name_options_str  += '<option value="Ammapet_TNJ">Ammapet_TNJ</option>';
+            Block_Name_options_str  += '<option value="Anaicut">Anaicut</option>';
+            Block_Name_options_str  += '<option value="Anaimalai">Anaimalai</option>';
+            Block_Name_options_str  += '<option value="Anakkavoor">Anakkavoor</option>';
+            Block_Name_options_str  += '<option value="Andanallur">Andanallur</option>';
+            Block_Name_options_str  += '<option value="Andimadam">Andimadam</option>';
+            Block_Name_options_str  += '<option value="Andipatti">Andipatti</option>';
+            Block_Name_options_str  += '<option value="Annagramam">Annagramam</option>';
+            Block_Name_options_str  += '<option value="Annavasal">Annavasal</option>';
+            Block_Name_options_str  += '<option value="Annur">Annur</option>';
+            Block_Name_options_str  += '<option value="Anthiyur">Anthiyur</option>';
+            Block_Name_options_str  += '<option value="Arakonam">Arakonam</option>';
+            Block_Name_options_str  += '<option value="Arantangi">Arantangi</option>';
+            Block_Name_options_str  += '<option value="Aravakurichi">Aravakurichi</option>';
+            Block_Name_options_str  += '<option value="Arcot">Arcot</option>';
+            Block_Name_options_str  += '<option value="Arimalam">Arimalam</option>';
+            Block_Name_options_str  += '<option value="Ariyalur">Ariyalur</option>';
+            Block_Name_options_str  += '<option value="Arni">Arni</option>';
+            Block_Name_options_str  += '<option value="Aruppukottai">Aruppukottai</option>';
+            Block_Name_options_str  += '<option value="Athoor">Athoor</option>';
+            Block_Name_options_str  += '<option value="Attur">Attur</option>';
+            Block_Name_options_str  += '<option value="Avinashi">Avinashi</option>';
+            Block_Name_options_str  += '<option value="Avudayarkoil">Avudayarkoil</option>';
+            Block_Name_options_str  += '<option value="Ayothiyapattinam">Ayothiyapattinam</option>';
+            Block_Name_options_str  += '<option value="Bargur">Bargur</option>';
+            Block_Name_options_str  += '<option value="Batlagundu">Batlagundu</option>';
+            Block_Name_options_str  += '<option value="Bhavani">Bhavani</option>';
+            Block_Name_options_str  += '<option value="Bhavanisagar">Bhavanisagar</option>';
+            Block_Name_options_str  += '<option value="Bodinaickanur">Bodinaickanur</option>';
+            Block_Name_options_str  += '<option value="Bogalur">Bogalur</option>';
+            Block_Name_options_str  += '<option value="Budalur">Budalur</option>';
+            Block_Name_options_str  += '<option value="CHENNAI">CHENNAI</option>';
+            Block_Name_options_str  += '<option value="Chellampatti">Chellampatti</option>';
+            Block_Name_options_str  += '<option value="Chengam">Chengam</option>';
+            Block_Name_options_str  += '<option value="Chennimalai">Chennimalai</option>';
+            Block_Name_options_str  += '<option value="Cheranmahadevi">Cheranmahadevi</option>';
+            Block_Name_options_str  += '<option value="Chetpet">Chetpet</option>';
+            Block_Name_options_str  += '<option value="Cheyyar">Cheyyar</option>';
+            Block_Name_options_str  += '<option value="Chinnamanur">Chinnamanur</option>';
+            Block_Name_options_str  += '<option value="Chinnasalem">Chinnasalem</option>';
+            Block_Name_options_str  += '<option value="Chithamur">Chithamur</option>';
+            Block_Name_options_str  += '<option value="Coonoor">Coonoor</option>';
+            Block_Name_options_str  += '<option value="Cuddalore">Cuddalore</option>';
+            Block_Name_options_str  += '<option value="Cumbum">Cumbum</option>';
+            Block_Name_options_str  += '<option value="Devakottai">Devakottai</option>';
+            Block_Name_options_str  += '<option value="Dharapuram">Dharapuram</option>';
+            Block_Name_options_str  += '<option value="Dharmapuri">Dharmapuri</option>';
+            Block_Name_options_str  += '<option value="Dindigul">Dindigul</option>';
+            Block_Name_options_str  += '<option value="Elacipalayam">Elacipalayam</option>';
+            Block_Name_options_str  += '<option value="Ellapuram">Ellapuram</option>';
+            Block_Name_options_str  += '<option value="Eriyur">Eriyur</option>';
+            Block_Name_options_str  += '<option value="Erode">Erode</option>';
+            Block_Name_options_str  += '<option value="Erumapatty">Erumapatty</option>';
+            Block_Name_options_str  += '<option value="Gandarvakottai">Gandarvakottai</option>';
+            Block_Name_options_str  += '<option value="Gangavalli">Gangavalli</option>';
+            Block_Name_options_str  += '<option value="Gingee">Gingee</option>';
+            Block_Name_options_str  += '<option value="Gobi">Gobi</option>';
+            Block_Name_options_str  += '<option value="Gudalur">Gudalur</option>';
+            Block_Name_options_str  += '<option value="Gudimangalam">Gudimangalam</option>';
+            Block_Name_options_str  += '<option value="Gudiyatham">Gudiyatham</option>';
+            Block_Name_options_str  += '<option value="Gummidipoondi">Gummidipoondi</option>';
+            Block_Name_options_str  += '<option value="Guziliamparai">Guziliamparai</option>';
+            Block_Name_options_str  += '<option value="Harur">Harur</option>';
+            Block_Name_options_str  += '<option value="Hosur">Hosur</option>';
+            Block_Name_options_str  += '<option value="Idappady">Idappady</option>';
+            Block_Name_options_str  += '<option value="Ilayangudi">Ilayangudi</option>';
+            Block_Name_options_str  += '<option value="Jawadumalai">Jawadumalai</option>';
+            Block_Name_options_str  += '<option value="Jayamkondam">Jayamkondam</option>';
+            Block_Name_options_str  += '<option value="Jolarpet">Jolarpet</option>';
+            Block_Name_options_str  += '<option value="K  Paramathi">K  Paramathi</option>';
+            Block_Name_options_str  += '<option value="K.V. Kuppam">K.V. Kuppam</option>';
+            Block_Name_options_str  += '<option value="Kabilarmalai">Kabilarmalai</option>';
+            Block_Name_options_str  += '<option value="Kadaladi">Kadaladi</option>';
+            Block_Name_options_str  += '<option value="Kadambathur">Kadambathur</option>';
+            Block_Name_options_str  += '<option value="Kadathur">Kadathur</option>';
+            Block_Name_options_str  += '<option value="Kadavur">Kadavur</option>';
+            Block_Name_options_str  += '<option value="Kadayam">Kadayam</option>';
+            Block_Name_options_str  += '<option value="Kadayampatti">Kadayampatti</option>';
+            Block_Name_options_str  += '<option value="Kadayanallur">Kadayanallur</option>';
+            Block_Name_options_str  += '<option value="Kalaiyarkoil">Kalaiyarkoil</option>';
+            Block_Name_options_str  += '<option value="Kalakadu">Kalakadu</option>';
+            Block_Name_options_str  += '<option value="Kalasapakkam">Kalasapakkam</option>';
+            Block_Name_options_str  += '<option value="Kallakurichi">Kallakurichi</option>';
+            Block_Name_options_str  += '<option value="Kallal">Kallal</option>';
+            Block_Name_options_str  += '<option value="Kallikudi">Kallikudi</option>';
+            Block_Name_options_str  += '<option value="Kalrayanhills">Kalrayanhills</option>';
+            Block_Name_options_str  += '<option value="Kammapuram">Kammapuram</option>';
+            Block_Name_options_str  += '<option value="Kamuthi">Kamuthi</option>';
+            Block_Name_options_str  += '<option value="Kanai">Kanai</option>';
+            Block_Name_options_str  += '<option value="Kancheepuram">Kancheepuram</option>';
+            Block_Name_options_str  += '<option value="Kandamangalam">Kandamangalam</option>';
+            Block_Name_options_str  += '<option value="Kandhili">Kandhili</option>';
+            Block_Name_options_str  += '<option value="Kangayam">Kangayam</option>';
+            Block_Name_options_str  += '<option value="Kaniyambadi">Kaniyambadi</option>';
+            Block_Name_options_str  += '<option value="Kannangudi">Kannangudi</option>';
+            Block_Name_options_str  += '<option value="Karamadai">Karamadai</option>';
+            Block_Name_options_str  += '<option value="Karambakkudi">Karambakkudi</option>';
+            Block_Name_options_str  += '<option value="Kariapatti">Kariapatti</option>';
+            Block_Name_options_str  += '<option value="Karimangalam">Karimangalam</option>';
+            Block_Name_options_str  += '<option value="Karungulam">Karungulam</option>';
+            Block_Name_options_str  += '<option value="Karur">Karur</option>';
+            Block_Name_options_str  += '<option value="Katpadi">Katpadi</option>';
+            Block_Name_options_str  += '<option value="Kattankolathur">Kattankolathur</option>';
+            Block_Name_options_str  += '<option value="Kattumannar Koil">Kattumannar Koil</option>';
+            Block_Name_options_str  += '<option value="Kaveripakkam">Kaveripakkam</option>';
+            Block_Name_options_str  += '<option value="Kaveripattinam">Kaveripattinam</option>';
+            Block_Name_options_str  += '<option value="Kayathar">Kayathar</option>';
+            Block_Name_options_str  += '<option value="Keelaiyur">Keelaiyur</option>';
+            Block_Name_options_str  += '<option value="Keelapavoor">Keelapavoor</option>';
+            Block_Name_options_str  += '<option value="Keerapalayam">Keerapalayam</option>';
+            Block_Name_options_str  += '<option value="Kelamangalam">Kelamangalam</option>';
+            Block_Name_options_str  += '<option value="Killiyoor">Killiyoor</option>';
+            Block_Name_options_str  += '<option value="Kilpenathur">Kilpenathur</option>';
+            Block_Name_options_str  += '<option value="Kilvelur">Kilvelur</option>';
+            Block_Name_options_str  += '<option value="Kinathukadavu">Kinathukadavu</option>';
+            Block_Name_options_str  += '<option value="Kodaikanal">Kodaikanal</option>';
+            Block_Name_options_str  += '<option value="Kodavasal">Kodavasal</option>';
+            Block_Name_options_str  += '<option value="Kodumudi">Kodumudi</option>';
+            Block_Name_options_str  += '<option value="Kolathur">Kolathur</option>';
+            Block_Name_options_str  += '<option value="Koliyanur">Koliyanur</option>';
+            Block_Name_options_str  += '<option value="Kollidam">Kollidam</option>';
+            Block_Name_options_str  += '<option value="Kollihills">Kollihills</option>';
+            Block_Name_options_str  += '<option value="Konganapuram">Konganapuram</option>';
+            Block_Name_options_str  += '<option value="Koradacheri">Koradacheri</option>';
+            Block_Name_options_str  += '<option value="Kotagiri">Kotagiri</option>';
+            Block_Name_options_str  += '<option value="Kottampatti">Kottampatti</option>';
+            Block_Name_options_str  += '<option value="Kottur">Kottur</option>';
+            Block_Name_options_str  += '<option value="Kovilpatti">Kovilpatti</option>';
+            Block_Name_options_str  += '<option value="Krishnagiri">Krishnagiri</option>';
+            Block_Name_options_str  += '<option value="Krishnarayapuram">Krishnarayapuram</option>';
+            Block_Name_options_str  += '<option value="Kulithalai">Kulithalai</option>';
+            Block_Name_options_str  += '<option value="Kumaratchi">Kumaratchi</option>';
+            Block_Name_options_str  += '<option value="Kumbakonam">Kumbakonam</option>';
+            Block_Name_options_str  += '<option value="Kundadam">Kundadam</option>';
+            Block_Name_options_str  += '<option value="Kundrathur">Kundrathur</option>';
+            Block_Name_options_str  += '<option value="Kunnandarkoil">Kunnandarkoil</option>';
+            Block_Name_options_str  += '<option value="Kurinjipadi">Kurinjipadi</option>';
+            Block_Name_options_str  += '<option value="Kurunthancode">Kurunthancode</option>';
+            Block_Name_options_str  += '<option value="Kuruvikulam">Kuruvikulam</option>';
+            Block_Name_options_str  += '<option value="Kuthalam">Kuthalam</option>';
+            Block_Name_options_str  += '<option value="Lalgudi">Lalgudi</option>';
+            Block_Name_options_str  += '<option value="Lathur">Lathur</option>';
+            Block_Name_options_str  += '<option value="Mac. Choultry">Mac. Choultry</option>';
+            Block_Name_options_str  += '<option value="Madathukulam">Madathukulam</option>';
+            Block_Name_options_str  += '<option value="Madhanur">Madhanur</option>';
+            Block_Name_options_str  += '<option value="Madukkarai">Madukkarai</option>';
+            Block_Name_options_str  += '<option value="Madukkur">Madukkur</option>';
+            Block_Name_options_str  += '<option value="Madurai East">Madurai East</option>';
+            Block_Name_options_str  += '<option value="Madurai West">Madurai West</option>';
+            Block_Name_options_str  += '<option value="Madurantakam">Madurantakam</option>';
+            Block_Name_options_str  += '<option value="Mailam">Mailam</option>';
+            Block_Name_options_str  += '<option value="Mallasamudram">Mallasamudram</option>';
+            Block_Name_options_str  += '<option value="Manachanallur">Manachanallur</option>';
+            Block_Name_options_str  += '<option value="Manamadurai">Manamadurai</option>';
+            Block_Name_options_str  += '<option value="Manamelkudi">Manamelkudi</option>';
+            Block_Name_options_str  += '<option value="Manapparai">Manapparai</option>';
+            Block_Name_options_str  += '<option value="Mandapam">Mandapam</option>';
+            Block_Name_options_str  += '<option value="Mangalore">Mangalore</option>';
+            Block_Name_options_str  += '<option value="Manikandam">Manikandam</option>';
+            Block_Name_options_str  += '<option value="Mannargudi">Mannargudi</option>';
+            Block_Name_options_str  += '<option value="Manur">Manur</option>';
+            Block_Name_options_str  += '<option value="Marungapuri">Marungapuri</option>';
+            Block_Name_options_str  += '<option value="Mathur">Mathur</option>';
+            Block_Name_options_str  += '<option value="Mayiladuthurai">Mayiladuthurai</option>';
+            Block_Name_options_str  += '<option value="Mecheri">Mecheri</option>';
+            Block_Name_options_str  += '<option value="Melaneelithanallur">Melaneelithanallur</option>';
+            Block_Name_options_str  += '<option value="Melbhuvanagiri">Melbhuvanagiri</option>';
+            Block_Name_options_str  += '<option value="Melmalayanur">Melmalayanur</option>';
+            Block_Name_options_str  += '<option value="Melpuram">Melpuram</option>';
+            Block_Name_options_str  += '<option value="Melur">Melur</option>';
+            Block_Name_options_str  += '<option value="Merkanam">Merkanam</option>';
+            Block_Name_options_str  += '<option value="Minjur">Minjur</option>';
+            Block_Name_options_str  += '<option value="Modakkuruchi">Modakkuruchi</option>';
+            Block_Name_options_str  += '<option value="Mohanur">Mohanur</option>';
+            Block_Name_options_str  += '<option value="Morappur">Morappur</option>';
+            Block_Name_options_str  += '<option value="Mudukulathur">Mudukulathur</option>';
+            Block_Name_options_str  += '<option value="Mugaiyur">Mugaiyur</option>';
+            Block_Name_options_str  += '<option value="Mulanur">Mulanur</option>';
+            Block_Name_options_str  += '<option value="Munchirai">Munchirai</option>';
+            Block_Name_options_str  += '<option value="Musiri">Musiri</option>';
+            Block_Name_options_str  += '<option value="Muthupettai">Muthupettai</option>';
+            Block_Name_options_str  += '<option value="Myladumparai">Myladumparai</option>';
+            Block_Name_options_str  += '<option value="Nagapattinam">Nagapattinam</option>';
+            Block_Name_options_str  += '<option value="Nainarkoil">Nainarkoil</option>';
+            Block_Name_options_str  += '<option value="Nallampalli">Nallampalli</option>';
+            Block_Name_options_str  += '<option value="Nallur">Nallur</option>';
+            Block_Name_options_str  += '<option value="Namagiripet">Namagiripet</option>';
+            Block_Name_options_str  += '<option value="Namakkal">Namakkal</option>';
+            Block_Name_options_str  += '<option value="Nambiyur">Nambiyur</option>';
+            Block_Name_options_str  += '<option value="Nangavalli">Nangavalli</option>';
+            Block_Name_options_str  += '<option value="Nanguneri">Nanguneri</option>';
+            Block_Name_options_str  += '<option value="Nannilam">Nannilam</option>';
+            Block_Name_options_str  += '<option value="Narikudi">Narikudi</option>';
+            Block_Name_options_str  += '<option value="Natham">Natham</option>';
+            Block_Name_options_str  += '<option value="Natrampalli">Natrampalli</option>';
+            Block_Name_options_str  += '<option value="Needamangalam">Needamangalam</option>';
+            Block_Name_options_str  += '<option value="Nemili">Nemili</option>';
+            Block_Name_options_str  += '<option value="Nilakottai">Nilakottai</option>';
+            Block_Name_options_str  += '<option value="Oddanchatram">Oddanchatram</option>';
+            Block_Name_options_str  += '<option value="Olakkur">Olakkur</option>';
+            Block_Name_options_str  += '<option value="Omalur">Omalur</option>';
+            Block_Name_options_str  += '<option value="Orathanadu">Orathanadu</option>';
+            Block_Name_options_str  += '<option value="Ottapidaram">Ottapidaram</option>';
+            Block_Name_options_str  += '<option value="P.N.Palayam">P.N.Palayam</option>';
+            Block_Name_options_str  += '<option value="Palacode">Palacode</option>';
+            Block_Name_options_str  += '<option value="Palani">Palani</option>';
+            Block_Name_options_str  += '<option value="Palayamkottai">Palayamkottai</option>';
+            Block_Name_options_str  += '<option value="Palladam">Palladam</option>';
+            Block_Name_options_str  += '<option value="Pallipalayam">Pallipalayam</option>';
+            Block_Name_options_str  += '<option value="Pallipet">Pallipet</option>';
+            Block_Name_options_str  += '<option value="Panamarathupatti">Panamarathupatti</option>';
+            Block_Name_options_str  += '<option value="Panruti">Panruti</option>';
+            Block_Name_options_str  += '<option value="Papanasam">Papanasam</option>';
+            Block_Name_options_str  += '<option value="Pappakudi">Pappakudi</option>';
+            Block_Name_options_str  += '<option value="Pappireddipatti">Pappireddipatti</option>';
+            Block_Name_options_str  += '<option value="Paramakudi">Paramakudi</option>';
+            Block_Name_options_str  += '<option value="Paramathy">Paramathy</option>';
+            Block_Name_options_str  += '<option value="Parangipettai">Parangipettai</option>';
+            Block_Name_options_str  += '<option value="Pattukkottai">Pattukkottai</option>';
+            Block_Name_options_str  += '<option value="Pennagaram">Pennagaram</option>';
+            Block_Name_options_str  += '<option value="Perambalur">Perambalur</option>';
+            Block_Name_options_str  += '<option value="Peranamallur">Peranamallur</option>';
+            Block_Name_options_str  += '<option value="Peravurani">Peravurani</option>';
+            Block_Name_options_str  += '<option value="Periyakulam">Periyakulam</option>';
+            Block_Name_options_str  += '<option value="Pernambet">Pernambet</option>';
+            Block_Name_options_str  += '<option value="Perundurai">Perundurai</option>';
+            Block_Name_options_str  += '<option value="Pollachi(N)">Pollachi(N)</option>';
+            Block_Name_options_str  += '<option value="Pollachi(S)">Pollachi(S)</option>';
+            Block_Name_options_str  += '<option value="Polur">Polur</option>';
+            Block_Name_options_str  += '<option value="Pongalur">Pongalur</option>';
+            Block_Name_options_str  += '<option value="Ponnamaravathi">Ponnamaravathi</option>';
+            Block_Name_options_str  += '<option value="Poonamallee">Poonamallee</option>';
+            Block_Name_options_str  += '<option value="Poondi">Poondi</option>';
+            Block_Name_options_str  += '<option value="Puduchatram">Puduchatram</option>';
+            Block_Name_options_str  += '<option value="Pudukkottai">Pudukkottai</option>';
+            Block_Name_options_str  += '<option value="Pudupalayam">Pudupalayam</option>';
+            Block_Name_options_str  += '<option value="Pudur">Pudur</option>';
+            Block_Name_options_str  += '<option value="Pullampady">Pullampady</option>';
+            Block_Name_options_str  += '<option value="Puzhal">Puzhal</option>';
+            Block_Name_options_str  += '<option value="R.K.Pet">R.K.Pet</option>';
+            Block_Name_options_str  += '<option value="R.S. Mangalam">R.S. Mangalam</option>';
+            Block_Name_options_str  += '<option value="Radhapuram">Radhapuram</option>';
+            Block_Name_options_str  += '<option value="Rajakkamangalam">Rajakkamangalam</option>';
+            Block_Name_options_str  += '<option value="Rajapalayam">Rajapalayam</option>';
+            Block_Name_options_str  += '<option value="Ramanathapuram">Ramanathapuram</option>';
+            Block_Name_options_str  += '<option value="Rasipuram">Rasipuram</option>';
+            Block_Name_options_str  += '<option value="Reddiarchatram">Reddiarchatram</option>';
+            Block_Name_options_str  += '<option value="Rishivandiyam">Rishivandiyam</option>';
+            Block_Name_options_str  += '<option value="S.Pudur">S.Pudur</option>';
+            Block_Name_options_str  += '<option value="S.S.Kulam">S.S.Kulam</option>';
+            Block_Name_options_str  += '<option value="Sakkottai">Sakkottai</option>';
+            Block_Name_options_str  += '<option value="Salem">Salem</option>';
+            Block_Name_options_str  += '<option value="Sankarankoil">Sankarankoil</option>';
+            Block_Name_options_str  += '<option value="Sankarapuram">Sankarapuram</option>';
+            Block_Name_options_str  += '<option value="Sankari">Sankari</option>';
+            Block_Name_options_str  += '<option value="Sathy">Sathy</option>';
+            Block_Name_options_str  += '<option value="Sattankulam">Sattankulam</option>';
+            Block_Name_options_str  += '<option value="Sattur">Sattur</option>';
+            Block_Name_options_str  += '<option value="Sedapatti">Sedapatti</option>';
+            Block_Name_options_str  += '<option value="Sembanarkoil">Sembanarkoil</option>';
+            Block_Name_options_str  += '<option value="Sendamangalam">Sendamangalam</option>';
+            Block_Name_options_str  += '<option value="Sendurai">Sendurai</option>';
+            Block_Name_options_str  += '<option value="Sethubavachatram">Sethubavachatram</option>';
+            Block_Name_options_str  += '<option value="Shanarpatti">Shanarpatti</option>';
+            Block_Name_options_str  += '<option value="Shencottai">Shencottai</option>';
+            Block_Name_options_str  += '<option value="Sholavaram">Sholavaram</option>';
+            Block_Name_options_str  += '<option value="Sholinghur">Sholinghur</option>';
+            Block_Name_options_str  += '<option value="Shoolagiri">Shoolagiri</option>';
+            Block_Name_options_str  += '<option value="Singampunari">Singampunari</option>';
+            Block_Name_options_str  += '<option value="Sirkali">Sirkali</option>';
+            Block_Name_options_str  += '<option value="Sivagangai">Sivagangai</option>';
+            Block_Name_options_str  += '<option value="Sivakasi">Sivakasi</option>';
+            Block_Name_options_str  += '<option value="Srimushnam">Srimushnam</option>';
+            Block_Name_options_str  += '<option value="Sriperumbudur">Sriperumbudur</option>';
+            Block_Name_options_str  += '<option value="Srivaikuntam">Srivaikuntam</option>';
+            Block_Name_options_str  += '<option value="Srivilliputhur">Srivilliputhur</option>';
+            Block_Name_options_str  += '<option value="Sultanpet">Sultanpet</option>';
+            Block_Name_options_str  += '<option value="Sulur">Sulur</option>';
+            Block_Name_options_str  += '<option value="T Palur">T Palur</option>';
+            Block_Name_options_str  += '<option value="T.Kallupatty">T.Kallupatty</option>';
+            Block_Name_options_str  += '<option value="T.N. Palayam">T.N. Palayam</option>';
+            Block_Name_options_str  += '<option value="T.Pet">T.Pet</option>';
+            Block_Name_options_str  += '<option value="Talavadi">Talavadi</option>';
+            Block_Name_options_str  += '<option value="Tenkasi">Tenkasi</option>';
+            Block_Name_options_str  += '<option value="Thalainayar">Thalainayar</option>';
+            Block_Name_options_str  += '<option value="Thalaivasal">Thalaivasal</option>';
+            Block_Name_options_str  += '<option value="Thally">Thally</option>';
+            Block_Name_options_str  += '<option value="Thandrampet">Thandrampet</option>';
+            Block_Name_options_str  += '<option value="Thanjavur">Thanjavur</option>';
+            Block_Name_options_str  += '<option value="Thanthoni">Thanthoni</option>';
+            Block_Name_options_str  += '<option value="Tharamangalam">Tharamangalam</option>';
+            Block_Name_options_str  += '<option value="Thellar">Thellar</option>';
+            Block_Name_options_str  += '<option value="Theni">Theni</option>';
+            Block_Name_options_str  += '<option value="Thimiri">Thimiri</option>';
+            Block_Name_options_str  += '<option value="Thiruchuli">Thiruchuli</option>';
+            Block_Name_options_str  += '<option value="Thirukalukundram">Thirukalukundram</option>';
+            Block_Name_options_str  += '<option value="Thirukoilur">Thirukoilur</option>';
+            Block_Name_options_str  += '<option value="Thirumangalam">Thirumangalam</option>';
+            Block_Name_options_str  += '<option value="Thirumanur">Thirumanur</option>';
+            Block_Name_options_str  += '<option value="Thirumarugal">Thirumarugal</option>';
+            Block_Name_options_str  += '<option value="Thirumayam">Thirumayam</option>';
+            Block_Name_options_str  += '<option value="Thirunavalur">Thirunavalur</option>';
+            Block_Name_options_str  += '<option value="Thirupathur">Thirupathur</option>';
+            Block_Name_options_str  += '<option value="Thiruporur">Thiruporur</option>';
+            Block_Name_options_str  += '<option value="Thirupparankundram">Thirupparankundram</option>';
+            Block_Name_options_str  += '<option value="Thiruppathur">Thiruppathur</option>';
+            Block_Name_options_str  += '<option value="Thiruppullani">Thiruppullani</option>';
+            Block_Name_options_str  += '<option value="Thiruppuvanam">Thiruppuvanam</option>';
+            Block_Name_options_str  += '<option value="Thiruthuraipoondi">Thiruthuraipoondi</option>';
+            Block_Name_options_str  += '<option value="Thiruvadanai">Thiruvadanai</option>';
+            Block_Name_options_str  += '<option value="Thiruvaiyaru">Thiruvaiyaru</option>';
+            Block_Name_options_str  += '<option value="Thiruvarankulam">Thiruvarankulam</option>';
+            Block_Name_options_str  += '<option value="Thiruvarur">Thiruvarur</option>';
+            Block_Name_options_str  += '<option value="Thiruvattar">Thiruvattar</option>';
+            Block_Name_options_str  += '<option value="Thiruvennainallur">Thiruvennainallur</option>';
+            Block_Name_options_str  += '<option value="Thiruverambur">Thiruverambur</option>';
+            Block_Name_options_str  += '<option value="Thiruvidaimarudur">Thiruvidaimarudur</option>';
+            Block_Name_options_str  += '<option value="Thiruvonam">Thiruvonam</option>';
+            Block_Name_options_str  += '<option value="Thiyagadurgam">Thiyagadurgam</option>';
+            Block_Name_options_str  += '<option value="Thogamalai">Thogamalai</option>';
+            Block_Name_options_str  += '<option value="Thomas Malai">Thomas Malai</option>';
+            Block_Name_options_str  += '<option value="Thondamuthur">Thondamuthur</option>';
+            Block_Name_options_str  += '<option value="Thoothukudi">Thoothukudi</option>';
+            Block_Name_options_str  += '<option value="Thoppampatti">Thoppampatti</option>';
+            Block_Name_options_str  += '<option value="Thottiam">Thottiam</option>';
+            Block_Name_options_str  += '<option value="Thovalai">Thovalai</option>';
+            Block_Name_options_str  += '<option value="Thuckalay">Thuckalay</option>';
+            Block_Name_options_str  += '<option value="Thuraiyur">Thuraiyur</option>';
+            Block_Name_options_str  += '<option value="Thurinjapuram">Thurinjapuram</option>';
+            Block_Name_options_str  += '<option value="Tiruchendur">Tiruchendur</option>';
+            Block_Name_options_str  += '<option value="Tiruchengode">Tiruchengode</option>';
+            Block_Name_options_str  += '<option value="Tiruppanandal">Tiruppanandal</option>';
+            Block_Name_options_str  += '<option value="Tiruppur">Tiruppur</option>';
+            Block_Name_options_str  += '<option value="Tiruttani">Tiruttani</option>';
+            Block_Name_options_str  += '<option value="Tiruvalangadu">Tiruvalangadu</option>';
+            Block_Name_options_str  += '<option value="Tiruvallur">Tiruvallur</option>';
+            Block_Name_options_str  += '<option value="Tiruvannamalai">Tiruvannamalai</option>';
+            Block_Name_options_str  += '<option value="Udangudi">Udangudi</option>';
+            Block_Name_options_str  += '<option value="Udhagai">Udhagai</option>';
+            Block_Name_options_str  += '<option value="Udumalpet">Udumalpet</option>';
+            Block_Name_options_str  += '<option value="Ulundurpet">Ulundurpet</option>';
+            Block_Name_options_str  += '<option value="Uppiliyapuram">Uppiliyapuram</option>';
+            Block_Name_options_str  += '<option value="Usilampatti">Usilampatti</option>';
+            Block_Name_options_str  += '<option value="Uthamapalayam">Uthamapalayam</option>';
+            Block_Name_options_str  += '<option value="Uthangarai">Uthangarai</option>';
+            Block_Name_options_str  += '<option value="Uthiramerur">Uthiramerur</option>';
+            Block_Name_options_str  += '<option value="Uthukuli">Uthukuli</option>';
+            Block_Name_options_str  += '<option value="Vadamadurai">Vadamadurai</option>';
+            Block_Name_options_str  += '<option value="Vadipatti">Vadipatti</option>';
+            Block_Name_options_str  += '<option value="Vaiyampatty">Vaiyampatty</option>';
+            Block_Name_options_str  += '<option value="Valangaiman">Valangaiman</option>';
+            Block_Name_options_str  += '<option value="Valapady">Valapady</option>';
+            Block_Name_options_str  += '<option value="Vallam">Vallam</option>';
+            Block_Name_options_str  += '<option value="Valliyoor">Valliyoor</option>';
+            Block_Name_options_str  += '<option value="Vandavasi">Vandavasi</option>';
+            Block_Name_options_str  += '<option value="Vanur">Vanur</option>';
+            Block_Name_options_str  += '<option value="Vasudevanallur">Vasudevanallur</option>';
+            Block_Name_options_str  += '<option value="Vedaranyam">Vedaranyam</option>';
+            Block_Name_options_str  += '<option value="Vedasandur">Vedasandur</option>';
+            Block_Name_options_str  += '<option value="Veerapandy">Veerapandy</option>';
+            Block_Name_options_str  += '<option value="Vellakoil">Vellakoil</option>';
+            Block_Name_options_str  += '<option value="Vellore">Vellore</option>';
+            Block_Name_options_str  += '<option value="Vembakkam">Vembakkam</option>';
+            Block_Name_options_str  += '<option value="Vembakottai">Vembakottai</option>';
+            Block_Name_options_str  += '<option value="Vennandur">Vennandur</option>';
+            Block_Name_options_str  += '<option value="Veppanapalli">Veppanapalli</option>';
+            Block_Name_options_str  += '<option value="Veppanthattai">Veppanthattai</option>';
+            Block_Name_options_str  += '<option value="Veppur">Veppur</option>';
+            Block_Name_options_str  += '<option value="Vikravandi">Vikravandi</option>';
+            Block_Name_options_str  += '<option value="Vilathikulam">Vilathikulam</option>';
+            Block_Name_options_str  += '<option value="Villivakkam">Villivakkam</option>';
+            Block_Name_options_str  += '<option value="Viralimalai">Viralimalai</option>';
+            Block_Name_options_str  += '<option value="Virudhunagar">Virudhunagar</option>';
+            Block_Name_options_str  += '<option value="Vridhachalam">Vridhachalam</option>';
+            Block_Name_options_str  += '<option value="Walajabad">Walajabad</option>';
+            Block_Name_options_str  += '<option value="Walajah">Walajah</option>';
+            Block_Name_options_str  += '<option value="Watrap">Watrap</option>';
+            Block_Name_options_str  += '<option value="West Arni">West Arni</option>';
+            Block_Name_options_str  += '<option value="Yercaud">Yercaud</option>';
+            Block_Name_options_str  += '<option value="periyanayakenpalayam">periyanayakenpalayam</option>';
+            sel_Block_Name.innerHTML = Block_Name_options_str;
+            div_Block_Name.appendChild(sel_Block_Name);
+            var lab_Block_Name = document.createElement('div');
+            lab_Block_Name.innerHTML = 'Block_Name';
+            lab_Block_Name.className = 'filterlabel';
+            div_Block_Name.appendChild(lab_Block_Name);
+            var reset_Block_Name = document.createElement('div');
+            reset_Block_Name.innerHTML = 'clear filter';
+            reset_Block_Name.className = 'filterlabel';
+            reset_Block_Name.onclick = function() {
+                var options = document.getElementById("sel_Block_Name").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Block_Name.appendChild(reset_Block_Name);
+        </script>
+    </body>
+</html>
